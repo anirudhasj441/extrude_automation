@@ -105,6 +105,45 @@ def exportStl( aObj: bpy.types.Object, aFilePath: str ):
     ## Export the object
     bpy.ops.export_mesh.stl( filepath = aFilePath, use_selection=True )
 ## end exportStl()
+
+def exportPlane( aObj: bpy.types.Object, aFilePath: str ):
+    ## deselect all other objects
+    bpy.ops.object.select_all(action="DESELECT")
+
+    ## select exporting object
+    aObj.select_set( True )
+
+    bpy.context.view_layer.objects.active = aObj
+
+    bpy.ops.object.mode_set( mode="EDIT")
+
+     # Get BMesh
+    bm = bmesh.from_edit_mesh(aObj.data)
+    bm.faces.ensure_lookup_table()
+
+    # selecting all faces
+    for face in bm.faces:
+        face.select = True
+
+    ## Selecting the Farthest Face Along a Given Axis
+    maxCenterMedian  = 0
+
+    maxCenterMedian = max([ f.calc_center_median().z for f in bm.faces ])
+
+    # deselct the faces that to be exported currently that along to z axis
+    for face in bm.faces:
+        if face.calc_center_median().z == maxCenterMedian:
+            face.select = False
+
+    ## delete the selected faces
+    bpy.ops.mesh.delete( type = 'FACE' )
+
+    ## retun to object mode
+    bpy.ops.object.mode_set( mode='OBJECT' )
+
+    ## export the object
+    exportStl( aObj, aFilePath )  
+
     
 if __name__ == "__main__":
     try:
@@ -128,9 +167,11 @@ if __name__ == "__main__":
         obj: bpy.types.Object = bpy.data.objects[ 0 ] ## assuming stl file has only
                                                     ## one mesh object
 
-        extrudeObj( obj, 5, Axix.Z )
+        # extrudeObj( obj, 5, Axix.Z )
 
-        exportStl( obj, outStl )
+        # exportStl( obj, outStl )
+
+        exportPlane( obj, outStl )
 
         clearAll()
     
