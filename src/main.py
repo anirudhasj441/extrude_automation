@@ -116,10 +116,6 @@ def unregister():
     bpy.utils.unregister_class( AddMeshOperator )
 
 if __name__ == "__main__":
-    try:
-        unregister()
-    except Exception as e:
-        print(f"Error during unregistering: {e}")
     register()
     registerProps()
     pass
