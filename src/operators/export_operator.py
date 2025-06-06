@@ -2,6 +2,7 @@
 #
 # @autor Anurudha Jadha
 
+from stl_operator import StlOperator
 import bpy
 from bpy.types import Object, Context, Event
 from bpy_extras.io_utils import ExportHelper
@@ -38,12 +39,9 @@ class ExportOperator( bpy.types.Operator, ExportHelper ):
 
     def execute( self, aContext: bpy.types.Context ):
         obj: Object = aContext.scene.stlObject
-        if not obj: return {"CANCELLED"}
-
         filepath = self.filepath
-        if not filepath or filepath.strip() == "":
-            return {"CANCELLED"}
         
-        bpy.ops.export_mesh.stl( filepath=self.filepath, use_selection=True )
+        stl: StlOperator = StlOperator()
+        stl.exportStl( obj, filepath )
         
         return {"FINISHED"}

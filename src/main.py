@@ -8,6 +8,7 @@
 import bpy 
 import sys
 import os
+from bpy.app.handlers import persistent
 
 # Get the directory where main.py is located
 current_dir = os.path.dirname(__file__)
@@ -28,6 +29,9 @@ from panels.export_plane_panel import ExportPlanePanel
 from operators.export_plane_operator import ExportPlaneOperator
 from operators.add_mesh_operator import AddMeshOperator
 from panels.add_mesh_panel import AddMeshPanel
+from panels.export_mul_faces_panel import ExportMulFacesPanel
+from operators.export_mul_faces_operator import ExportMulFacesOperator
+from handlers.obj_selection_handler import ObjectSelectionHandler
 
 ## registering props
 def registerProps():
@@ -78,8 +82,6 @@ def registerProps():
         default=MeshType.PLANE.value
     )
 
-
-
 ## registering Panels and operators
 def register():
     bpy.utils.register_class( ImportStlPanel )
@@ -92,6 +94,10 @@ def register():
     bpy.utils.register_class( ExportPlaneOperator )
     bpy.utils.register_class( AddMeshPanel )
     bpy.utils.register_class( AddMeshOperator )
+    bpy.utils.register_class( ExportMulFacesPanel )
+    bpy.utils.register_class( ExportMulFacesOperator )
+
+    registerHandlers()
 
 
 ## unregistering props
@@ -114,9 +120,28 @@ def unregister():
     bpy.utils.unregister_class( ExportPlaneOperator )
     bpy.utils.unregister_class( AddMeshPanel )
     bpy.utils.unregister_class( AddMeshOperator )
+    bpy.utils.unregister_class( ExportMulFacesPanel )
+    bpy.utils.unregister_class( ExportMulFacesOperator )
+    
+    unregisterHandlers()
+
+def registerHandlers():
+    # Register any necessary handlers here
+    bpy.app.handlers.depsgraph_update_post.append( 
+        ObjectSelectionHandler.depsgraph_update
+    )
+    pass
+
+# Unregister any handlers if necessary
+def unregisterHandlers():
+    # Unregister any necessary handlers here
+    bpy.app.handlers.depsgraph_update_post.remove( 
+        ObjectSelectionHandler.depsgraph_update
+    )
+    pass
 
 if __name__ == "__main__":
-    register()
     registerProps()
+    register()
     pass
     

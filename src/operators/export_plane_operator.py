@@ -3,6 +3,7 @@
 # @autor Anurudha Jadha
 # 
 
+from stl_operator import StlOperator
 from utils.enums import Axis, FaceSide
 import bpy
 import bmesh
@@ -45,94 +46,12 @@ class ExportPlaneOperator( Operator, ExportHelper ):
         
 
     def execute(self, aContext: Context ):
-        obj: Object = aContext.scene.stlObject
-        if not obj: return {"CANCELLED"}
-
-        if not self.filepath or self.filepath.strip() == "": 
-            return {"CANCELLED"}
-        
-        faceToExport: FaceSide = FaceSide(aContext.scene.faceToExport)
-
-
-        # Deselect all
-        bpy.ops.object.select_all(action='DESELECT')
-
-        obj.select_set( True )
-        bpy.ops.object.duplicate()
-        obj_copy = aContext.selected_objects[0]
-        aContext.view_layer.objects.active = obj_copy
-
-        bpy.ops.object.mode_set( mode="EDIT")
-        bm: BMesh = bmesh.from_edit_mesh( obj_copy.data )
-        bm.faces.ensure_lookup_table()
-
-        for face in bm.faces:
-            face.select = True
-
-        negativeSides: List[FaceSide] = [ 
-            FaceSide.BACK, 
-            FaceSide.LEFT, 
-            FaceSide.BOTTOM 
-        ]     
-
-        axisFaceMap = {
-            FaceSide.FRONT: Axis.X,
-            FaceSide.BACK: Axis.X,
-            FaceSide.LEFT: Axis.Y,
-            FaceSide.RIGHT: Axis.Y,
-            FaceSide.TOP: Axis.Z,
-            FaceSide.BOTTOM: Axis.Z
-        }
-        
-        axis = axisFaceMap[faceToExport]
-
-        maxCenterMedian: int = 0
-        minCenterMedian: int = 0
-
-        if Axis.X == axis:
-            maxCenterMedian = max([ 
-                face.calc_center_median().x for face in bm.faces 
-            ])
-            minCenterMedian =  min([ 
-                face.calc_center_median().x for face in bm.faces 
-            ])
-            
-        elif Axis.Y == axis:
-            maxCenterMedian = max([ 
-                face.calc_center_median().y for face in bm.faces 
-            ])
-            minCenterMedian = min([ 
-                face.calc_center_median().y for face in bm.faces 
-            ])
-            
-        elif Axis.Z == axis:
-            maxCenterMedian = max([ 
-                face.calc_center_median().z for face in bm.faces 
-            ]) 
-            minCenterMedian = min([ 
-                face.calc_center_median().z for face in bm.faces 
-            ])
-
-        for face in bm.faces:
-            axisFaceCenterMedianMap: Dict[Axis, int]  = {
-                Axis.X: face.calc_center_median().x,
-                Axis.Y: face.calc_center_median().y,
-                Axis.Z: face.calc_center_median().z
-            }
-
-            centerMedian = ( minCenterMedian if faceToExport in 
-                    negativeSides else maxCenterMedian )
-            
-            if axisFaceCenterMedianMap[ axis ] == centerMedian:
-                face.select = False
-
-        bpy.ops.mesh.delete( type="FACE" )
-
-        bpy.ops.object.mode_set( mode="OBJECT" )
-
-        bpy.ops.export_mesh.stl( filepath=self.filepath, use_selection=True )
-
-        bpy.data.objects.remove( obj_copy, do_unlink=True )
+        stl: StlOperator = StlOperator()
+        stl.exportFace( 
+            aContext.scene.stlObject,
+            FaceSide(aContext.scene.faceToExport),
+            self.filepath
+        )
 
         return {"FINISHED"}
 

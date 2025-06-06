@@ -4,7 +4,7 @@
 # @autor Anurudha Jadha
 # 
 
-
+from stl_operator import StlOperator
 from utils.helper_functions import *
 from bpy_extras.io_utils import ImportHelper
 import bpy
@@ -26,10 +26,8 @@ class ImportStlOperator( bpy.types.Operator, ImportHelper ):
     filename_ext = ".stl"
     
     def execute(self, aContext: bpy.types.Context ):
-        if ( not self.filepath or 
-            self.filepath.strip() == ""): return {'CANCELLED'}
-        
-        clearAll()
-        bpy.ops.import_mesh.stl( filepath = self.filepath )
+        stl: StlOperator = StlOperator()
+
+        stl.importStl( self.filepath )
     
         return {'FINISHED'}

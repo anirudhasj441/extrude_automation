@@ -3,6 +3,7 @@
 # @autor Anurudha Jadha
 # 
 
+from stl_operator import StlOperator
 from utils.enums import Axis
 from typing import Dict, Tuple
 import bpy
@@ -25,66 +26,73 @@ class ExtrudeOperator( bpy.types.Operator ):
     bl_label = "Extrude"
 
     def execute(self, aContext: bpy.types.Context ):
-        obj: bpy.types.Object = aContext.scene.stlObject
-        axis: Axis = Axis(aContext.scene.alongAxis)
-        extrudeBy: int = aContext.scene.extrudeBy
-
-        if not obj: return {'CANCELLED'}
-
-        ## deslect all object
-        bpy.ops.object.select_all( action='DESELECT' )
-
-        obj.select_set( True )
-
-        aContext.view_layer.objects.active = obj
-
-        bpy.ops.object.mode_set( mode='EDIT' )
-
-        bm:bmesh.types.BMesh = bmesh.from_edit_mesh( obj.data )
-        bm.faces.ensure_lookup_table()
-
-        for face in bm.faces:
-            face.select = False
-
-        maxCenterMedian: int = 0
-
-        if Axis.X == axis:
-            maxCenterMedian = max([ 
-                face.calc_center_median().x for face in bm.faces 
-            ])
-            
-        elif Axis.Y == axis:
-            maxCenterMedian = max([ 
-                face.calc_center_median().y for face in bm.faces 
-            ])
-            
-        elif Axis.Z == axis:
-            maxCenterMedian = max([ 
-                face.calc_center_median().z for face in bm.faces 
-            ])
-            
-        for face in bm.faces:
-            axisFaceCenterMedianMap: Dict[Axis, int]  = {
-                Axis.X: face.calc_center_median().x,
-                Axis.Y: face.calc_center_median().y,
-                Axis.Z: face.calc_center_median().z
-            }
-
-            if axisFaceCenterMedianMap[ axis ] == maxCenterMedian:
-                face.select = True
-
-        bmesh.update_edit_mesh( aContext.edit_object.data )
-
-        extrudeValue: Tuple[int] = (
-            extrudeBy if Axis.X == axis else 0,
-            extrudeBy if Axis.Y == axis else 0,
-            extrudeBy if Axis.Z == axis else 0
+        stl: StlOperator = StlOperator()
+        stl.extrudeStl( 
+            aContext.scene.stlObject, 
+            Axis(aContext.scene.alongAxis), 
+            aContext.scene.extrudeBy
         )
 
-        bpy.ops.mesh.extrude_region_move( TRANSFORM_OT_translate={
-            "value": extrudeValue
-        })
+        # obj: bpy.types.Object = aContext.scene.stlObject
+        # axis: Axis = Axis(aContext.scene.alongAxis)
+        # extrudeBy: int = aContext.scene.extrudeBy
 
-        bpy.ops.object.mode_set( mode='OBJECT' )
+        # if not obj: return {'CANCELLED'}
+
+        # ## deslect all object
+        # bpy.ops.object.select_all( action='DESELECT' )
+
+        # obj.select_set( True )
+
+        # aContext.view_layer.objects.active = obj
+
+        # bpy.ops.object.mode_set( mode='EDIT' )
+
+        # bm:bmesh.types.BMesh = bmesh.from_edit_mesh( obj.data )
+        # bm.faces.ensure_lookup_table()
+
+        # for face in bm.faces:
+        #     face.select = False
+
+        # maxCenterMedian: int = 0
+
+        # if Axis.X == axis:
+        #     maxCenterMedian = max([ 
+        #         face.calc_center_median().x for face in bm.faces 
+        #     ])
+            
+        # elif Axis.Y == axis:
+        #     maxCenterMedian = max([ 
+        #         face.calc_center_median().y for face in bm.faces 
+        #     ])
+            
+        # elif Axis.Z == axis:
+        #     maxCenterMedian = max([ 
+        #         face.calc_center_median().z for face in bm.faces 
+        #     ])
+            
+        # for face in bm.faces:
+        #     axisFaceCenterMedianMap: Dict[Axis, int]  = {
+        #         Axis.X: face.calc_center_median().x,
+        #         Axis.Y: face.calc_center_median().y,
+        #         Axis.Z: face.calc_center_median().z
+        #     }
+
+        #     if axisFaceCenterMedianMap[ axis ] == maxCenterMedian:
+        #         face.select = True
+
+        # bmesh.update_edit_mesh( aContext.edit_object.data )
+
+        # extrudeValue: Tuple[int] = (
+        #     extrudeBy if Axis.X == axis else 0,
+        #     extrudeBy if Axis.Y == axis else 0,
+        #     extrudeBy if Axis.Z == axis else 0
+        # )
+
+        # bpy.ops.mesh.extrude_region_move( TRANSFORM_OT_translate={
+        #     "value": extrudeValue
+        # })
+
+        # bpy.ops.object.mode_set( mode='OBJECT' )
 
         return {'FINISHED'}
